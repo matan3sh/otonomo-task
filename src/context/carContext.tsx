@@ -1,96 +1,75 @@
-import { createContext, useContext, useState } from "react";
-import generateCarData from "../api/data-generator";
+import { createContext, useContext, useState, useCallback, useRef } from "react";
+import createCarStreamer from "../api/car-data-streamer";
+import { CarData } from "../api/data-generator";
 import createStreamerFrom from "../api/streamer";
-import createRandomColor from "../dom-utils/colors";
 
-type CarItem = {
+export type Vin = {
   vin: string;
   checked: boolean;
   color: string;
-  streamer: ReturnType<typeof createStreamerFrom>;
 }
+type ICarData = CarData & { color: string }
+type VinStreamer = { [vin: string]: ReturnType<typeof createStreamerFrom> }
 
 interface CarContextType {
   /* States */
-  value: string;
-  cars: CarItem[];
-  streamCars: CarItem[];
-  error: string | null;
-
-  /* Setters */
-  setValue: (value: string) => void;
-  setCars: (cars: CarItem[]) => void;
-  setError: (error: string | null) => void;
+  carData: ICarData[];
+  vinStreamer: VinStreamer;
 
   /* Handlers */
-  handleAddCar: () => void;
-  handleCheck: (car: CarItem) => void;
+  handleNewVin: (vin: Vin) => void;
+  handleCheckVin: (vin: Vin) => void;
+  handleFilter: (toggleFilter: boolean) => void;
 }
 
 const CarContext = createContext<CarContextType>({} as CarContextType);
 export const useCarContext = () => useContext(CarContext);
 
 export const CarContextProvider = ({ children }: { children: React.PropsWithChildren<{}> }) => {
-  const [value, setValue] = useState<string>('');
-  const [cars, setCars] = useState<CarItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [carData, setCarData] = useState<ICarData[]>([]);
+  const [vinStreamer, setVinStreamer] = useState<VinStreamer>({});
 
-  const isValidInput = () => {
-    const vin = value.trim();
-    let isValid = true;
+  /* Ref obj for saving the previous car data array when user click filter */
+  const unFilteredData = useRef<ICarData[]>([])
 
-    /* Check if the vin is not empty and at least 7 characters */
-    if (!value.length || vin.length < 7) {
-      setError('VIN must be at least 7 characters long');
-      isValid = false;
-    }
+  const handleNewVin = useCallback((vin) => {
+      if(vinStreamer[vin.vin]) {
+        return;
+      }
+      const carStreamer = createCarStreamer(vin.vin);
+      carStreamer.subscribe((data) => setCarData(prev => [{...data, color: vin.color}, ...prev]));
+      carStreamer.start();
+      setVinStreamer(prev => ({ ...prev,[vin.vin]: carStreamer }))
+  }, [vinStreamer]);
 
-    /* Check if the vin is already exists */
-    if (cars.some((car) => car.vin === vin)) {
-      setError('VIN already exists');
-      isValid = false;
-    }
-    return isValid;
-  }
-
-  const handleAddCar = () => {
-    if (!isValidInput()) {
+  const handleCheckVin = useCallback((vin) => {
+    if (vin.checked) {
+      vinStreamer[vin.vin]?.start();
       return;
     }
+    vinStreamer[vin.vin]?.stop();
+  }, [vinStreamer]);
 
-    const newVin = {
-      vin: value,
-      checked: false,
-      color: createRandomColor(),
-      streamer: createStreamerFrom(() => generateCarData(value)),
+  const handleFilter = (toggleFilter: boolean) => {
+    if (!toggleFilter) {
+      unFilteredData.current = [...carData];
+      const filteredCars = carData.filter(car => car.fuel < 0.15);
+      setCarData(filteredCars);
+      return;
     }
-    setCars(prev => [...prev, newVin]);
-    setValue('');
-  }
-
-  const handleCheck = (car: CarItem) => {
-    const updatedCar = {...car, checked: !car.checked};
-    const updatedCars = cars.map(currentCar => currentCar.vin === car.vin ? updatedCar : currentCar);
-    setCars(updatedCars);
+    setCarData([...unFilteredData.current]);
   }
 
   return (
     <CarContext.Provider value={{
-
       /* States */
-      value,
-      cars,
-      streamCars: cars.filter(car => car.checked),
-      error,
-
-      /* Setters */
-      setValue,
-      setCars,
-      setError,
+      carData,
+      vinStreamer,
 
       /* Handlers */
-      handleAddCar,
-      handleCheck,
+      handleNewVin,
+      handleCheckVin,
+      handleFilter,
     }}>
       {children}
     </CarContext.Provider>

@@ -1,33 +1,33 @@
 .sidebar {
-  flex: 0.7;
-}
+  flex: 0.5;
 
-.sidebar__input{
-  display: flex;
-  gap: 20px;
-}
+  &__input{
+    display: flex;
+    gap: 20px;
 
-.sidebar__input-wrapper{
-  display: flex;
-  flex-direction: column;
-  height: 32px;
-}
+    &-wrapper{
+      display: flex;
+      flex-direction: column;
+      height: 32px;
 
-.sidebar__input-wrapper span{
-  font-size: 9px;
-  font-weight: bold;
-  text-align: left;
-  color: red;
-  transform: translateY(5px);
-}
+      span{
+        font-size: 9px;
+        font-weight: bold;
+        text-align: left;
+        color: red;
+        transform: translateY(5px);
+      }
+    }
+  }
 
-.sidebar__vins{
-  text-align: left;
-}
+  &__vins{
+    text-align: left;
 
-.sidebar__vins-list{
-  display: flex;
-  text-align: left;
-  gap: 5px;
-  margin-top: 20px;
+    &-list{
+      display: flex;
+      text-align: left;
+      gap: 5px;
+      margin-top: 20px;
+    }
+  }
 }

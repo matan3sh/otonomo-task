@@ -1,5 +1,25 @@
 .main{
   flex: 1;
-  max-height: 95vh;
-  width: 100%;
+  min-height: 55vh;
+  border: 0.5px solid #cdcdcd;
+  padding: 25px;
+  border-radius: 4px;
+
+  &__filter{
+    text-align: left;
+    height: 26px;
+  }
+
+  &__events{
+    max-height: 85vh;
+    overflow-y: scroll;
+  }
+
+  &__events::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__event{
+    margin: 20px 0;
+  }
 }
