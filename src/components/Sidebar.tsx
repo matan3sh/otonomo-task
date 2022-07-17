@@ -6,6 +6,8 @@ import Checkbox from './Checkbox';
 import Input from './Input';
 import './Sidebar.scss';
 
+const SPECIAL_CHARACTERS_REGEX = /[ !"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]/;
+
 export function Sidebar() {
   const { handleCheckVin, handleNewVin } = useCarContext();
   const [vin, setVin] = useState<string>('');
@@ -53,7 +55,8 @@ export function Sidebar() {
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setVin(e.target.value);
+    const { value } = e.target;
+    setVin(value.replace(SPECIAL_CHARACTERS_REGEX, '').toUpperCase());
   }
 
   return (
